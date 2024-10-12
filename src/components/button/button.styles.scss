@@ -4,8 +4,8 @@
   height: 50px;
   letter-spacing: 0.5px;
   line-height: 50px;
-  padding: 0 35px 0 35px;
-  font-size: 15px;
+  padding: 0 20px; // Reduced padding to avoid clipping
+  font-size: 14px; // Reduced font-size to fit text better
   background-color: black;
   color: white;
   text-transform: uppercase;
@@ -14,7 +14,9 @@
   border: none;
   cursor: pointer;
   display: flex;
+  align-items: center; // Align text vertically
   justify-content: center;
+  text-align: center; // Ensure text stays centered
   &:hover {
     background-color: white;
     color: black;

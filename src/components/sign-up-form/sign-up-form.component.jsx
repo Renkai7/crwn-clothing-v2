@@ -40,6 +40,7 @@ const SignUpForm = () => {
         email,
         password
       );
+
       // * create user and add to database
       await createUserDocumentFromAuth(user, { displayName });
 
