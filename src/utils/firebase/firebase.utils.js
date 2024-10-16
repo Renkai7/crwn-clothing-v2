@@ -1,7 +1,7 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
+  signInWithRedirect,
   signInWithPopup,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -9,22 +9,28 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  collection,
+  writeBatch,
+  query,
+} from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyANBEZn0EZiP1daY0rJUxXlyg_uJFlH9e4",
-  authDomain: "crwn-clothing-db-b7395.firebaseapp.com",
-  projectId: "crwn-clothing-db-b7395",
-  storageBucket: "crwn-clothing-db-b7395.appspot.com",
-  messagingSenderId: "86694755553",
-  appId: "1:86694755553:web:3f4241f83d57488188cba0",
+  apiKey: "AIzaSyDDU4V-_QV3M8GyhC9SVieRTDM4dbiT0Yk",
+  authDomain: "crwn-clothing-db-98d4d.firebaseapp.com",
+  projectId: "crwn-clothing-db-98d4d",
+  storageBucket: "crwn-clothing-db-98d4d.appspot.com",
+  messagingSenderId: "626766232035",
+  appId: "1:626766232035:web:506621582dab103a4d08d6",
 };
 
-// Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 
-// * Authorization section
 const googleProvider = new GoogleAuthProvider();
 
 googleProvider.setCustomParameters({
@@ -32,24 +38,52 @@ googleProvider.setCustomParameters({
 });
 
 export const auth = getAuth();
-
-// Sign in with Google
 export const signInWithGooglePopup = () =>
   signInWithPopup(auth, googleProvider);
+export const signInWithGoogleRedirect = () =>
+  signInWithRedirect(auth, googleProvider);
 
-// * Database Section
 export const db = getFirestore();
-// Create users
+export const addCollectionAndDocuments = async (
+  collectionKey,
+  objectsToAdd
+) => {
+  const batch = writeBatch(db);
+  const collectionRef = collection(db, collectionKey);
+
+  objectsToAdd.forEach((object) => {
+    const docRef = doc(collectionRef, object.title.toLowerCase());
+    batch.set(docRef, object);
+  });
+
+  await batch.commit();
+  console.log("done");
+};
+
+export const getCategoriesAndDocuments = async () => {
+  const collectionRef = collection(db, "categories");
+  const q = query(collectionRef);
+
+  const querySnapshot = await getDocs(q);
+  const categoryMap = querySnapshot.docs.reduce((acc, docSnapshot) => {
+    const { title, items } = docSnapshot.data();
+    acc[title.toLowerCase()] = items;
+    return acc;
+  }, {});
+
+  return categoryMap;
+};
+
 export const createUserDocumentFromAuth = async (
   userAuth,
   additionalInformation = {}
 ) => {
   if (!userAuth) return;
+
   const userDocRef = doc(db, "users", userAuth.uid);
 
   const userSnapshot = await getDoc(userDocRef);
 
-  // Check if user exists, if not then set them in the doc
   if (!userSnapshot.exists()) {
     const { displayName, email } = userAuth;
     const createdAt = new Date();
@@ -62,14 +96,13 @@ export const createUserDocumentFromAuth = async (
         ...additionalInformation,
       });
     } catch (error) {
-      console.log("Error creating the user", error.message);
+      console.log("error creating the user", error.message);
     }
   }
 
   return userDocRef;
 };
 
-// Create User with Email and Password
 export const createAuthUserWithEmailAndPassword = async (email, password) => {
   if (!email || !password) return;
 
